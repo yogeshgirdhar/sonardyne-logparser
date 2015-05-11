@@ -1,0 +1,85 @@
+#!/usr/bin/env python
+#Yogesh Girdhar <yogi@whoi.edu>, 2015
+
+import utm
+import csv, sys, math
+from datetime import datetime
+from optparse import OptionParser
+
+
+parser = OptionParser(usage="usage: %prog [options] sonardynelogfile1.csv sonardynelogfile2.csv ..")
+(options, args) =  parser.parse_args()
+
+utm_zone=(17,'N') # initialize it with a location in Hannibal mount, Panama
+
+
+#increase the csv field size to handle the "JobData" column
+csv.field_size_limit(sys.maxsize)
+
+ship_latlon=(0,0)
+ship_heading=0
+timestamp=""
+name=""
+pos=(0,0)
+pos_latlon=(0,0)
+frame=""
+
+data=[]
+epoch = datetime(1970,1,1)
+
+#print("Timestamp, ship_lat, ship_lon, ship_heading, vehicle_name, vehicle_lat, vehicle_lon, vehicle_x, vehicle_y, vehicle_z")
+for filename in args:
+#	print filename
+	with open(filename, 'rb') as csvfile:
+		for row in csv.reader(csvfile):
+			update=False
+			try:
+				if (row[0]=='GPSLatLongObs'):
+					ship_latlon=(float(row[10]),float(row[11]))
+					ship_utm=utm.from_latlon(ship_latlon[0],ship_latlon[1])
+					timestamp=row[7] #milliseconds to microseconds
+					name=row[3] #vessel name
+					data.append((datetime.strptime(timestamp+"000","%Y-%m-%d %H:%M:%S.%f"), timestamp, 'LATLON', name, ship_latlon[0], ship_latlon[1]))
+#					print "ShipLatLon:",ship_latlon
+					#update=True
+				if (row[0]=='HeadingObs'):
+					ship_heading=float(row[10])
+					name=row[3] #vessel name
+					timestamp=row[7]
+					data.append((datetime.strptime(timestamp+"000","%Y-%m-%d %H:%M:%S.%f"), timestamp, 'HEADING', name, ship_heading)) 
+				if (row[0]=='GridPositionObs'):
+					timestamp=row[7]
+					frame=row[5] #coordinate frame
+					name=row[3] #vessel name
+#					if(name=='ALUCIA'):  #ignore the grid position updates of the ship
+#						continue
+					pos=(float(row[10]),float(row[11]),float(row[12])) #position in meters (x,y,z)
+					data.append((datetime.strptime(timestamp+"000","%Y-%m-%d %H:%M:%S.%f"), timestamp, 'XYZ', name, frame, pos[0],pos[1],pos[2])) 
+#					theta=math.radians(ship_heading)
+#					pos_rotated=(pos[1]*math.sin(theta) + pos[0]*math.cos(theta), pos[1]*math.cos(theta) -pos[0]*math.sin(theta))  
+#					pos_latlon=utm.to_latlon(ship_utm[0]+pos_rotated[0], ship_utm[1]+pos_rotated[1], ship_utm[2], ship_utm[3])
+#					update=True
+			except ValueError:
+				pass
+#			if(update):
+#				print ", ".join([timestamp,str(ship_latlon[0]),str(ship_latlon[1]), str(ship_heading), name, str(pos_latlon[0]),str(pos_latlon[1]), str(pos[0]), str(pos[1]), str(pos[2])])
+#print "Sorting by timestamps"
+xyz={}
+data=sorted(data,key=lambda d: d[0])
+for d in data:
+	print ','.join(map(str,d[1:]))
+	if(d[2]=='XYZ'):
+		timestamp = d[1]
+		frame = d[4]
+		name = d[3]
+		#print(timestamp, frame, name)
+		if(frame=='World'):
+			xyz[name]=(d[5],d[6],d[7])
+		else:
+			wpos=(xyz[frame][0]+d[5], xyz[frame][1]+d[6], xyz[frame][2]+d[7])  #world pos
+			if wpos[0] > 10000000 or wpos[1] > 10000000:
+				continue
+			#print wpos
+			ll=utm.to_latlon(wpos[0], wpos[1], utm_zone[0], utm_zone[1])
+			print ','.join((timestamp, 'XYZ', name, 'World', str(wpos[0]), str(wpos[1]), str(wpos[2])))
+			print ','.join((timestamp, 'LATLON', name, str(ll[0]), str(ll[1]), str(wpos[2]) ))
