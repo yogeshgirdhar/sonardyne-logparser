@@ -77,7 +77,8 @@ data=sorted(data,key=lambda d: d[0])
 print "Writing transformed data"
 for d in data:
 	#print ','.join(map(str,d[1:]))
-	outf.write(','.join(map(str,d[1:])))
+#	outf.write(','.join(map(str,d[1:])))
+#	outf.write('\n')
 	if(d[2]=='XYZ'):
 		timestamp = d[1]
 		frame = d[4]
@@ -93,6 +94,8 @@ for d in data:
 			ll=utm.to_latlon(wpos[0], wpos[1], utm_zone[0], utm_zone[1])
 			#print ','.join((timestamp, 'XYZ', name, 'World', str(wpos[0]), str(wpos[1]), str(wpos[2])))
 			#print ','.join((timestamp, 'LATLON', name, str(ll[0]), str(ll[1]), str(wpos[2]) ))
-			outf.write(','.join((timestamp, 'XYZ', name, 'World', str(wpos[0]), str(wpos[1]), str(wpos[2]))))
+			#outf.write(','.join((timestamp, 'XYZ', name, 'World', str(wpos[0]), str(wpos[1]), str(wpos[2]))))
+			#outf.write('\n')
 			outf.write(','.join((timestamp, 'LATLON', name, str(ll[0]), str(ll[1]), str(wpos[2]) )))
+			outf.write('\n')
 print "Done"
