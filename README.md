@@ -8,7 +8,6 @@ Takes in sonardyne USBL log files, and outputs location of tracked vehicles in C
 </code>
 
 
-Current UTM zone information needs to be set manually in the sonardyne_parse file
 
 #License
 The MIT License (MIT)
