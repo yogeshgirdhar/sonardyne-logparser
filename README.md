@@ -1,10 +1,12 @@
 # sonardyne-logparser
-Takes in sonardyne USBL log files, and outputs location of tracked vehicles in CSV format
+Takes in sonardyne USBL log files, and outputs location of tracked vehicles in CSV format.
+
 
 # Usage
 <code>
-  $sonardyne_parse sonardynelogfile1.csv sonardynelogfile2.csv ... > output_file.csv
+  $sonardyne_parse <UTM zone number> <UTM zone letter> <output.csv> sonardynelogfile1.csv [sonardynelogfile2.csv ..]
 </code>
+
 
 Current UTM zone information needs to be set manually in the sonardyne_parse file
 
